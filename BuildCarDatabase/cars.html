@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<!--suppress ALL -->
+<html lang="No-nb">
+<head>
+    <link rel="stylesheet" type="text/css" href="assets/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mine biler</title>
+</head>
+<style>
+    body {
+        font-family: 'Open Sans', sans-serif;
+        font-weight: 300;
+        line-height: 1.42em;
+        color: #A7A1AE;
+        background-color: #1F2739;
+    }
+
+    h1 {
+        font-size: 3em;
+        font-weight: 300;
+        line-height: 1em;
+        text-align: center;
+        color: #4DC3FA;
+    }
+
+    h2 {
+        font-size: 1em;
+        font-weight: 300;
+        text-align: center;
+        display: block;
+        line-height: 1em;
+        padding-bottom: 2em;
+        color: #FB667A;
+    }
+
+    h2 a {
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #FB667A;
+        text-decoration: none;
+    }
+
+    .blue { color: #185875; }
+    .yellow { color: #FFF842; }
+
+    .container th {
+        font-weight: bold;
+        font-size: medium;
+        text-align: left;
+        color: #185875;
+       vertical-align: top;
+    }
+
+    .container td {
+        font-weight: normal;
+        font-size: 13px;
+        padding: 12px; /* Adjusted padding for better alignment */
+        -webkit-box-shadow: 0 2px 2px -2px #0E1119;
+        -moz-box-shadow: 0 2px 2px -2px #0E1119;
+        box-shadow: 0 2px 2px -2px #0E1119;
+    }
+
+
+    .container {
+        text-align: left;
+        overflow: hidden;
+        width: 80%;
+        margin: 0 auto;
+        display: table;
+        padding: 0 0 8em 0;
+    }
+
+    .container td, .container th {
+        padding-bottom: 0.5%;
+        padding-top: 0.5%;
+    }
+
+    /* Background-color of the odd rows */
+    .container tr:nth-child(odd) {
+        background-color: #323C50;
+    }
+
+    /* Background-color of the even rows */
+    .container tr:nth-child(even) {
+        background-color: #2C3446;
+    }
+
+    .container th {
+        background-color: #1F2739;
+    }
+
+    .container td:first-child { color: #FB667A; }
+
+    .container tr:hover {
+        background-color: #464A52;
+        -webkit-box-shadow: 0 6px 6px -6px #0E1119;
+        -moz-box-shadow: 0 6px 6px -6px #0E1119;
+        box-shadow: 0 6px 6px -6px #0E1119;
+    }
+
+    .container td:hover {
+        background-color: #FFF842;
+        color: black;
+        font-weight: bold;
+        padding: 12px; /* Adjusted padding for better alignment */
+
+        box-shadow: #7F7C21 -1px 1px, #7F7C21 -2px 2px, #7F7C21 -3px 3px, #7F7C21 -4px 4px, #7F7C21 -5px 5px, #7F7C21 -6px 6px;
+        transform: translate3d(6px, -6px, 0);
+
+        transition-delay: 0s;
+        transition-duration: 0.4s;
+        transition-property: all;
+        transition-timing-function: linear;
+    }
+
+    .container td a {
+        color: #FB667A;
+        text-decoration: none; /* Remove underline */
+    }
+
+
+
+
+    @media (max-width: 800px) {
+        .container td:nth-child(4),
+        .container th:nth-child(4) { display: none; }
+    }
+</style>
+<body>
+<br>
+<h1><span class="blue"></span>Mine<span class="blue"></span> <span class="yellow">biler</span></h1>
+<h2>Laget av <a href="https://lunde-consult.no/" target="_blank">Morten Lunde</a></h2>
+<br>
+<div class="table-wrapper">
+    <table id="data-table" class="container">
+        <!-- Table header and rows will be dynamically generated using JavaScript -->
+    </table>
+</div>
+<script>
+    const jsonDataUrl = 'cars.json';
+
+    // Load JSON data
+    fetch(jsonDataUrl)
+        .then(response => response.json())
+        .then(data => {
+            const table = document.getElementById('data-table');
+
+            // Create table header
+            const headerRow = table.createTHead().insertRow();
+
+            // Function to format column names
+            function transformColumnName(name) {
+                return name.replace(/([a-zæøå ])([A-ZÆØÅ])/g, '$1 $2'); // Add space before capital letters
+            }
+
+            // Populate table header and calculate maximum column widths
+            const maxColumnWidths = {};
+            data.forEach(item => {
+                for (const key in item) {
+                    const formattedKey = transformColumnName(key);
+                    maxColumnWidths[formattedKey] = Math.max(maxColumnWidths[formattedKey] || 0, String(item[key]).length);
+                }
+            });
+
+            // Set header cell widths based on maximum column widths
+            for (const key in maxColumnWidths) {
+                const th = document.createElement('th');
+                th.appendChild(document.createTextNode(transformColumnName(key)));
+                th.style.width = maxColumnWidths[key] + 'ch'; // Set width in characters
+                headerRow.appendChild(th);
+            }
+
+            // Populate table rows
+            data.forEach(item => {
+                const row = table.insertRow();
+                for (const key in item) {
+                    const cell = row.insertCell();
+                    // Check if the key ends with 'annonse' and if the corresponding value is not an empty string
+                    if (key.endsWith('annonse') && item[key] !== '') {
+                        // Create a hyperlink with the text 'Link'
+                        const link = document.createElement('a');
+                        link.href = item[key];
+                        link.target = '_blank';
+                        link.appendChild(document.createTextNode('Link'));
+                        cell.appendChild(link);
+                    } else {
+                        // Convert date to the desired format (dd.MM.yyyy) if it's a valid date
+                        if (key === 'Kjøpsdato' || key === 'Salgsdato') {
+                            const date = new Date(item[key]);
+                            if (!isNaN(date.getTime())) {
+                                cell.innerHTML = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+                            }
+                        } else {
+                            cell.innerHTML = item[key];
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error fetching JSON:', error));
+</script>
+</body>
+</html>
