@@ -67,7 +67,7 @@ namespace BuildCarDatabase
 
         private static List<Cars> GetCarsFromDatabase()
         {
-            List<Cars> carsFromDatabase = new List<Cars>();
+            List<Cars> carsFromDatabase = [];
 
             try
             {
@@ -81,8 +81,7 @@ namespace BuildCarDatabase
                     Cars car = new Cars
                     {
                         BilId = reader.GetInt32(Columns.BilId),
-                        MerkeNavn = reader.IsDBNull(reader.GetOrdinal(Columns.MerkeNavn)) ? null : reader.GetString(reader.GetOrdinal(Columns.MerkeNavn)),
-                        // ... other properties
+                        MerkeNavn = reader.IsDBNull(reader.GetOrdinal(Columns.MerkeNavn)) ? null : reader.GetString(reader.GetOrdinal(Columns.MerkeNavn))
                     };
 
                     carsFromDatabase.Add(car);
