@@ -6,37 +6,29 @@ namespace BuildCarDatabase
 {
     public static class Program
     {
-        private const string DatabaseConnectionString = "Server=lundeconsultno01.mysql.domeneshop.no;Database=lundeconsultno01;User=lundeconsultno01;Password=gove-6666-4111-megga";
         private const string HtmlPage = "cars.html";
-        private const string Filename = "cars.json";
-
-        private static void Main()
+        private const string JsonFilename = "cars.json";
+        private static async Task Main()
         {
-            string htmlContent = File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), HtmlPage));
-            
-            List<Cars> cars = DatabaseOperations.GenerateCarDataFromDatabase();
-
-            using (MemoryStream stream = new())
-            {
-                using (Utf8JsonWriter writer = new(stream, new JsonWriterOptions { Indented = true }))
-                {
-                    JsonDocument doc = JsonDocument.Parse(JsonSerializer.SerializeToUtf8Bytes(cars,
-                        new JsonSerializerOptions
-                        {
-                            WriteIndented = true,
-                            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                            Converters = { new JsonDateTimeConverter(), new JsonLinkConverter() }
-                        }));
-                    doc.WriteTo(writer);
-                }
-
-                string jsonString = Encoding.UTF8.GetString(stream.ToArray());
-                File.WriteAllText(Filename, jsonString, Encoding.UTF8);
-            }
-
-            DatabaseOperations.ExecuteQuery(DatabaseConnectionString, SqlQuery.Query);
-
+            // Read HTML content from file
+            string htmlContent = await File.ReadAllTextAsync(HtmlPage);
+            // Get cars data from the database
+            List<Cars> cars = DatabaseOperations.GetCarsFromDatabase();
+            // Serialize cars data to JSON and write to a file
+            SerializeToJsonAndWriteFile(cars);
+            // Start the web server with the HTML content
             WebServer.Start(htmlContent);
         }
+        private static void SerializeToJsonAndWriteFile(List<Cars> cars)
+        {
+            string jsonString = JsonSerializer.Serialize(cars, JsonOptions);
+            File.WriteAllText(JsonFilename, jsonString, Encoding.UTF8);
+        }
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            WriteIndented = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            Converters = { new JsonDateTimeConverter(), new JsonDateTimeConverter.JsonLinkConverter() }
+        };
     }
 }

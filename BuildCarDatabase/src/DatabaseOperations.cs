@@ -1,98 +1,82 @@
-using System.Data;
 using MySql.Data.MySqlClient;
-using Newtonsoft.Json;
 
 namespace BuildCarDatabase
 {
     public static class DatabaseOperations
     {
-        private const string DatabaseConnectionString = "Server=lundeconsultno01.mysql.domeneshop.no;Database=lundeconsultno01;User=lundeconsultno01;Password=gove-6666-4111-megga";
-
-        public static List<Cars> GenerateCarDataFromDatabase()
-        {
-            List<Cars> listOfCars = GetCarsFromDatabase();
-            return listOfCars;
-        }
-
-        public static string ExecuteQuery(string connectionString, string query)
-        {
-            try
-            {
-                using MySqlConnection connection = new MySqlConnection(connectionString);
-                using MySqlCommand command = new MySqlCommand(query, connection);
-                connection.Open();
-
-                using MySqlDataAdapter adapter = new MySqlDataAdapter(command);
-                DataTable dataTable = new DataTable();
-                adapter.Fill(dataTable);
-
-                List<Dictionary<string, object>> dataList = DataTableToList(dataTable);
-
-                string jsonData = JsonConvert.SerializeObject(dataList, Formatting.Indented);
-                return jsonData;
-            }
-            catch (Exception ex)
-            {
-                // Log the exception using a logging framework or console
-                Console.WriteLine($"Error executing query: {ex.Message}");
-                return string.Empty;
-            }
-        }
-
-        private static List<Dictionary<string, object>> DataTableToList(DataTable dataTable)
-        {
-            List<Dictionary<string, object>> dataList = new List<Dictionary<string, object>>();
-
-            foreach (DataRow row in dataTable.Rows)
-            {
-                Dictionary<string, object> dataRow = new Dictionary<string, object>();
-
-                foreach (DataColumn col in dataTable.Columns)
-                {
-                    if (col.ColumnName == Columns.Kjøpsannonse || col.ColumnName == Columns.Salgsannonse)
-                    {
-                        dataRow[col.ColumnName] = row[col].ToString() ?? throw new InvalidOperationException();
-                    }
-                    else
-                    {
-                        dataRow[col.ColumnName] = row[col];
-                    }
-                }
-
-                dataList.Add(dataRow);
-            }
-
-            return dataList;
-        }
-
-        private static List<Cars> GetCarsFromDatabase()
+        private const string DatabaseConnectionString = 
+            "Server=lundeconsultno01.mysql.domeneshop.no;Database=lundeconsultno01;User=lundeconsultno01;Password=gove-6666-4111-megga";
+        public static List<Cars> GetCarsFromDatabase()
         {
             List<Cars> carsFromDatabase = [];
-
             try
             {
-                using MySqlConnection connection = new MySqlConnection(DatabaseConnectionString);
-                using MySqlCommand command = new MySqlCommand(SqlQuery.Query, connection);
+                // Establish database connection
+                using MySqlConnection connection = new(DatabaseConnectionString);
+                using MySqlCommand command = new(SqlQuery.Query, connection);
                 connection.Open();
 
+                // Execute SQL query and process results
                 using MySqlDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                    Cars car = new Cars
+                    Cars car = new()
                     {
-                        BilId = reader.GetInt32(Columns.BilId),
-                        MerkeNavn = reader.IsDBNull(reader.GetOrdinal(Columns.MerkeNavn)) ? null : reader.GetString(reader.GetOrdinal(Columns.MerkeNavn))
+                        BilId = reader.IsDBNull(reader.GetOrdinal(nameof(Cars.BilId)))
+                            ? 0
+                            : reader.GetInt32(reader.GetOrdinal(nameof(Cars.BilId))),
+                        MerkeNavn = reader.IsDBNull(reader.GetOrdinal(nameof(Cars.MerkeNavn)))
+                            ? null
+                            : reader.GetString(reader.GetOrdinal(nameof(Cars.MerkeNavn))),
+                        ModellNavn = reader.IsDBNull(reader.GetOrdinal(nameof(Cars.ModellNavn)))
+                            ? null
+                            : reader.GetString(reader.GetOrdinal(nameof(Cars.ModellNavn))),
+                        Årsmodell = reader.IsDBNull(reader.GetOrdinal(nameof(Cars.Årsmodell)))
+                            ? 0
+                            : reader.GetInt32(reader.GetOrdinal(nameof(Cars.Årsmodell))),
+                        Farge = reader.IsDBNull(reader.GetOrdinal(nameof(Cars.Farge)))
+                            ? null
+                            : reader.GetString(reader.GetOrdinal(nameof(Cars.Farge))),
+                        RegNr = reader.IsDBNull(reader.GetOrdinal(nameof(Cars.RegNr)))
+                            ? null
+                            : reader.GetString(reader.GetOrdinal(nameof(Cars.RegNr))),
+                        Hestekrefter = reader.IsDBNull(reader.GetOrdinal(nameof(Cars.Hestekrefter)))
+                            ? null
+                            : reader.GetString(reader.GetOrdinal(nameof(Cars.Hestekrefter))),
+                        Karosseri = reader.IsDBNull(reader.GetOrdinal(nameof(Cars.Karosseri)))
+                            ? null
+                            : reader.GetString(reader.GetOrdinal(nameof(Cars.Karosseri))),
+                        Drivstoff = reader.IsDBNull(reader.GetOrdinal(nameof(Cars.Drivstoff)))
+                            ? null
+                            : reader.GetString(reader.GetOrdinal(nameof(Cars.Drivstoff))),
+                        Status = reader.IsDBNull(reader.GetOrdinal(nameof(Cars.Status)))
+                            ? null
+                            : reader.GetString(reader.GetOrdinal(nameof(Cars.Status))),
+                        Kjøpsdato = reader.GetDateTime(reader.GetOrdinal(nameof(Cars.Kjøpsdato))),
+                        Salgsdato = !string.IsNullOrEmpty(reader.GetString(nameof(Cars.Salgsdato)))
+                            ? reader.GetDateTime("Salgsdato")
+                            : null,
+                        KilometerstandVedKjøp = reader.IsDBNull(reader.GetOrdinal(nameof(Cars.KilometerstandVedKjøp)))
+                            ? null
+                            : reader.GetString(reader.GetOrdinal(nameof(Cars.KilometerstandVedKjøp))),
+                        KilometerstandVedSalg = !string.IsNullOrEmpty(reader.GetString(nameof(Cars.KilometerstandVedSalg)))
+                            ? reader.GetString("KilometerstandVedSalg")
+                            : null,
+                        Kjøpsannonse = reader.IsDBNull(reader.GetOrdinal(nameof(Cars.Kjøpsannonse)))
+                            ? null
+                            : reader.GetString(reader.GetOrdinal(nameof(Cars.Kjøpsannonse))),
+                        Salgsannonse = !string.IsNullOrEmpty(reader.GetString(nameof(Cars.Salgsannonse)))
+                            ? reader.GetString("Salgsannonse")
+                            : null
                     };
-
                     carsFromDatabase.Add(car);
                 }
+                connection.Close();
             }
             catch (Exception ex)
             {
-                // Log the exception using a logging framework or console
                 Console.WriteLine($"Error fetching cars from the database: {ex.Message}");
             }
-
             return carsFromDatabase;
         }
     }

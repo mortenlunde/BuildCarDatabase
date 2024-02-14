@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace BuildCarDatabase
 {
@@ -20,22 +21,19 @@ namespace BuildCarDatabase
             while (true)
             {
                 HttpListenerContext context = listener.GetContext();
-
-                // Process request asynchronously
                 Task.Run(() => ProcessRequest(context));
             }
             // ReSharper disable once FunctionNeverReturns
         }
 
         private static void ProcessRequest(HttpListenerContext context)
-        {
+        { // Method to process incoming HTTP requests
             try
-            {
+            {   // Send the HTML content as the response
                 if (context.Request.Url != null && context.Request.Url.AbsolutePath == "/")
                 {
                     context.Response.ContentType = "text/html; charset=utf-8";
-
-                    // Send HTML content to the client
+                    
                     if (_htmlContent == null) return;
                     byte[] buffer = Encoding.UTF8.GetBytes(_htmlContent);
                     context.Response.ContentLength64 = buffer.Length;
@@ -43,9 +41,10 @@ namespace BuildCarDatabase
                 }
                 else
                 {
-                    // Call the relevant method in Program.cs to get the response
-                    string response = DatabaseOperations.ExecuteQuery("Server=lundeconsultno01.mysql.domeneshop.no;Database=lundeconsultno01;User=lundeconsultno01;Password=gove-6666-4111-megga", SqlQuery.Query);
-                    
+                    List<Cars> cars = DatabaseOperations.GetCarsFromDatabase();
+            
+                    // Convert the list of cars to JSON string
+                    string response = JsonConvert.SerializeObject(cars, Formatting.Indented);                   
                     context.Response.ContentType = "text/html; charset=utf-8";
 
                     byte[] buffer = Encoding.UTF8.GetBytes(response);
