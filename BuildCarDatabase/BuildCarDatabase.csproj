@@ -14,7 +14,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="index.html" />
       <Content Include="cars.html">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
